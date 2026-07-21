@@ -1,3 +1,4 @@
+from app.database import db
 from fastapi import FastAPI
 from app.routers.student import router as student_router
 

@@ -6,6 +6,8 @@ client = MongoClient(MONGO_URL)
 
 db = client["skillsync_ai"]
 
+students_collection = db["students"]
+
 try:
     client.admin.command("ping")
     print("MongoDB Connected Successfully!")

@@ -1,6 +1,13 @@
 from fastapi import APIRouter
 from app.schemas.student import Student
-from app.database import students_collection
+from app.services.student_service import create_student
+from app.services.student_service import (
+    create_student,
+    get_all_students,
+    get_student_by_name,
+    update_student_age,
+    delete_student
+)
 
 router = APIRouter()
 
@@ -11,25 +18,22 @@ def get_student(student_id: int):
     }
 
 @router.post("/student")
-def create_student(student: Student):
+def register_student(student: Student):
 
     student_dict = student.model_dump()
 
-    result = students_collection.insert_one(student_dict)
+    inserted_id = create_student(student_dict)
 
     return {
         "status": "success",
         "message": "Student Registered Successfully",
-        "inserted_id": str(result.inserted_id)
+        "student_id": inserted_id
     }
 
 @router.get("/students")
 def get_students():
 
-    students = list(students_collection.find())
-
-    for student in students:
-        student["_id"] = str(student["_id"])
+    students = get_all_students()
 
     return {
         "total_students": len(students),
@@ -37,49 +41,39 @@ def get_students():
     }
 
 @router.get("/student/name/{name}")
-def get_student_by_name(name: str):
+def get_student(name: str):
 
-    student = students_collection.find_one({"name": name})
+    student = get_student_by_name(name)
 
     if student is None:
+
         return {
             "message": "Student Not Found"
         }
-
-    student["_id"] = str(student["_id"])
 
     return student
 
 @router.put("/student/{name}")
-def update_student(name: str, age: int, Course:str):
-    result = students_collection.update_one(
-        {"name": name},
-        {
-            "$set": {
-                "age": age,
-                "Course":Course
-            }
-        }
-    )
+def update_student(name: str, age: int):
 
-    if result.modified_count == 0:
+    updated = update_student_age(name, age)
+
+    if updated == 0:
+
         return {
             "message": "Student Not Found"
         }
+
     return {
         "message": "Student Updated Successfully"
     }
 
 @router.delete("/student/{name}")
-def delete_student(name: str):
+def remove_student(name: str):
 
-    result = students_collection.delete_one(
-        {
-            "name": name
-        }
-    )
+    deleted = delete_student(name)
 
-    if result.deleted_count == 0:
+    if deleted == 0:
 
         return {
             "message": "Student Not Found"

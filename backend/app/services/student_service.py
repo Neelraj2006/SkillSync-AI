@@ -1,10 +1,13 @@
 from app.database import students_collection
+from fastapi import HTTPException
 
 def create_student(student_dict):
 
     result = students_collection.insert_one(student_dict)
 
-    return str(result.inserted_id)
+    student_dict["_id"] = str(result.inserted_id)
+
+    return student_dict
 
 def get_all_students():
 
@@ -27,7 +30,12 @@ def get_student_by_name(name):
 
         student["_id"] = str(student["_id"])
 
-    return student
+        return student
+
+    raise HTTPException(
+        status_code=404,
+        detail="Student not found"
+    )
 
 def update_student_age(name, age):
 

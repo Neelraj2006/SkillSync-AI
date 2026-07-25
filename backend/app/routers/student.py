@@ -8,6 +8,8 @@ from app.services.student_service import (
     update_student_age,
     delete_student
 )
+from app.schemas.response import StudentResponse
+from fastapi import status
 
 router = APIRouter()
 
@@ -17,17 +19,21 @@ def get_student(student_id: int):
         "student_id": student_id
     }
 
-@router.post("/student")
+@router.post(
+    "/student",
+    response_model=StudentResponse,
+    status_code=status.HTTP_201_CREATED
+)
 def register_student(student: Student):
 
     student_dict = student.model_dump()
 
-    inserted_id = create_student(student_dict)
+    student = create_student(student_dict)
 
     return {
         "status": "success",
         "message": "Student Registered Successfully",
-        "student_id": inserted_id
+        "student": student
     }
 
 @router.get("/students")
@@ -44,12 +50,6 @@ def get_students():
 def get_student(name: str):
 
     student = get_student_by_name(name)
-
-    if student is None:
-
-        return {
-            "message": "Student Not Found"
-        }
 
     return student
 

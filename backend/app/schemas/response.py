@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
 class StudentResponse(BaseModel):
-    status: str
+    success: bool
     message: str
-    student: dict
+    data: dict | None = None

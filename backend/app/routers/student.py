@@ -10,6 +10,8 @@ from app.services.student_service import (
 )
 from app.schemas.response import StudentResponse
 from fastapi import status
+from app.utils.response import success_response
+from app.utils.response import success_response
 
 router = APIRouter()
 
@@ -22,7 +24,9 @@ def get_student(student_id: int):
 @router.post(
     "/student",
     response_model=StudentResponse,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    summary="Register Student",
+    description="Creates a new student in MongoDB."
 )
 def register_student(student: Student):
 
@@ -30,30 +34,37 @@ def register_student(student: Student):
 
     student = create_student(student_dict)
 
-    return {
-        "status": "success",
-        "message": "Student Registered Successfully",
-        "student": student
-    }
+    return success_response(
+    message="Student Registered Successfully",
+    data=student
+    )
 
 @router.get("/students")
 def get_students():
 
     students = get_all_students()
 
-    return {
-        "total_students": len(students),
-        "students": students
-    }
+    return success_response(
+    message="Students fetched successfully",
+    data=students
+)
 
-@router.get("/student/name/{name}")
+@router.get(
+    "/student/name/{name}",
+    summary="Get Student by Name",
+    description="Fetch a student's details using their name."
+)
 def get_student(name: str):
 
     student = get_student_by_name(name)
 
     return student
 
-@router.put("/student/{name}")
+@router.put(
+    "/student/{name}",
+    summary="Update Student Age",
+    description="Updates the age of a student using their name."
+)
 def update_student(name: str, age: int):
 
     updated = update_student_age(name, age)
@@ -64,11 +75,15 @@ def update_student(name: str, age: int):
             "message": "Student Not Found"
         }
 
-    return {
-        "message": "Student Updated Successfully"
-    }
+    return success_response(
+        message="Student Updated Successfully"
+    )
 
-@router.delete("/student/{name}")
+@router.delete(
+    "/student/{name}",
+    summary="Delete Student",
+    description="Deletes a student using their name."
+)
 def remove_student(name: str):
 
     deleted = delete_student(name)

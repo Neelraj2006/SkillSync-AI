@@ -1,6 +1,7 @@
 from app.database import db
 from fastapi import FastAPI
 from app.routers.student import router as student_router
+from app.routers.user import router as user_router
 
 app = FastAPI(
     title="SkillSync AI API",
@@ -26,3 +27,4 @@ def health():
     }
 
 app.include_router(student_router)
+app.include_router(user_router)

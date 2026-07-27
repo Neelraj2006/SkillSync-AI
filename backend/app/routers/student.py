@@ -12,6 +12,8 @@ from app.schemas.response import StudentResponse
 from fastapi import status
 from app.utils.response import success_response
 from app.utils.response import success_response
+from app.utils.auth import verify_token
+from fastapi import Depends
 
 router = APIRouter()
 

@@ -10,10 +10,9 @@ from app.services.student_service import (
 )
 from app.schemas.response import StudentResponse
 from fastapi import status
-from app.utils.response import success_response
-from app.utils.response import success_response
-from app.utils.auth import verify_token
+from app.utils.response import success_response, error_response
 from fastapi import Depends
+from app.utils.auth import verify_token
 
 router = APIRouter()
 
@@ -51,16 +50,24 @@ def get_students():
     data=students
 )
 
-@router.get(
-    "/student/name/{name}",
-    summary="Get Student by Name",
-    description="Fetch a student's details using their name."
-)
-def get_student(name: str):
+@router.get("/student/name/{name}")
+def get_student(
+    name: str,
+    user=Depends(verify_token)
+):
 
     student = get_student_by_name(name)
 
-    return student
+    if student is None:
+
+        return error_response(
+            "Student Not Found"
+        )
+
+    return success_response(
+        "Student Found",
+        student
+    )
 
 @router.put(
     "/student/{name}",

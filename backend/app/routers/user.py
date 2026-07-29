@@ -4,9 +4,15 @@ from app.services.user_service import create_user
 from app.utils.response import success_response
 from app.schemas.user import UserLogin
 from app.services.user_service import get_user_by_email
+from app.services.user_service import update_user_name
 from app.utils.security import verify_password
 from app.utils.response import success_response, error_response
 from app.utils.jwt_handler import create_access_token
+from app.utils.auth import verify_token
+from fastapi import Depends
+from app.schemas.user import UserUpdate
+from app.services.user_service import delete_user
+
 
 router = APIRouter()
 
@@ -51,4 +57,66 @@ def login_user(user: UserLogin):
             "access_token": token,
             "token_type": "bearer"
         }
+    )
+
+@router.get("/me")
+def get_current_user(
+    token_data=Depends(verify_token)
+):
+
+    email = token_data["email"]
+
+    user = get_user_by_email(email)
+
+    if user is None:
+
+        return error_response(
+            "User Not Found"
+        )
+
+    return success_response(
+        "User Found",
+        user
+    )
+
+@router.put("/me")
+def update_current_user(
+    user_update: UserUpdate,
+    token_data=Depends(verify_token)
+):
+
+    email = token_data["email"]
+
+    updated = update_user_name(
+        email,
+        user_update.name
+    )
+
+    if updated == 0:
+
+        return error_response(
+            "User Not Updated"
+        )
+
+    return success_response(
+        "User Updated Successfully"
+    )
+
+@router.delete("/me")
+def delete_current_user(
+    token_data=Depends(verify_token)
+):
+
+    email = token_data["email"]
+
+    deleted = delete_user(email)
+
+    if deleted == 0:
+
+        return error_response(
+            "User Not Found"
+        )
+
+    return success_response(
+        "User Deleted Successfully"
     )

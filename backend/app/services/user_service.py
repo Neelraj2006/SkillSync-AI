@@ -38,3 +38,28 @@ def email_exists(email: str):
     )
 
     return user is not None
+
+def update_user_name(email: str, new_name: str):
+
+    result = users_collection.update_one(
+        {
+            "email": email
+        },
+        {
+            "$set": {
+                "name": new_name
+            }
+        }
+    )
+
+    return result.modified_count
+
+def delete_user(email: str):
+
+    result = users_collection.delete_one(
+        {
+            "email": email
+        }
+    )
+
+    return result.deleted_count

@@ -24,7 +24,9 @@ import os
 from app.services.user_service import update_resume
 
 
-router = APIRouter()
+router = APIRouter(
+    tags=["Users"]
+)
 
 @router.post("/register")
 def register_user(user: UserRegister):

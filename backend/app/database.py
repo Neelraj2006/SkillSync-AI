@@ -18,6 +18,8 @@ students_collection = db[STUDENT_COLLECTION]
 
 users_collection = db[USER_COLLECTION]
 
+jobs_collection = db["jobs"]
+
 try:
     client.admin.command("ping")
     print("MongoDB Connected Successfully!")

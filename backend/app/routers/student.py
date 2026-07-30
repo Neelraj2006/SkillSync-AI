@@ -5,6 +5,7 @@ from app.services.student_service import (
     create_student,
     get_all_students,
     get_student_by_name,
+    get_student_by_id,
     update_student_age,
     delete_student
 )
@@ -14,13 +15,20 @@ from app.utils.response import success_response, error_response
 from fastapi import Depends
 from app.utils.auth import verify_token
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/student",
+    tags=["Students"]
+)
 
 @router.get("/student/{student_id}")
-def get_student(student_id: int):
-    return {
-        "student_id": student_id
-    }
+def get_student(student_id: str):
+
+    student = get_student_by_id(student_id)
+
+    return success_response(
+        "Student Found",
+        student
+    )
 
 @router.post(
     "/student",

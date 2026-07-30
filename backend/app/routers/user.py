@@ -12,6 +12,16 @@ from app.utils.auth import verify_token
 from fastapi import Depends
 from app.schemas.user import UserUpdate
 from app.services.user_service import delete_user
+from app.services.user_service import (
+    add_skill,
+    get_user_skills,
+    remove_skill
+)
+from fastapi import UploadFile, File
+import shutil
+import os
+
+from app.services.user_service import update_resume
 
 
 router = APIRouter()
@@ -119,4 +129,89 @@ def delete_current_user(
 
     return success_response(
         "User Deleted Successfully"
+    )
+
+@router.post("/me/skills")
+def add_user_skill(
+    skill: str,
+    token_data=Depends(verify_token)
+):
+
+    email = token_data["email"]
+
+    updated = add_skill(email, skill)
+
+    if updated == 0:
+
+        return error_response(
+            "Skill Already Exists or User Not Found"
+        )
+
+    return success_response(
+        "Skill Added Successfully"
+    )
+
+@router.get("/me/skills")
+def get_skills(
+    token_data=Depends(verify_token)
+):
+
+    email = token_data["email"]
+
+    skills = get_user_skills(email)
+
+    if skills is None:
+
+        return error_response(
+            "User Not Found"
+        )
+
+    return success_response(
+        "Skills Retrieved Successfully",
+        skills
+    )
+
+@router.delete("/me/skills/{skill}")
+def delete_skill(
+    skill: str,
+    token_data=Depends(verify_token)
+):
+
+    email = token_data["email"]
+
+    removed = remove_skill(email, skill)
+
+    if removed == 0:
+
+        return error_response(
+            "Skill Not Found"
+        )
+
+    return success_response(
+        "Skill Removed Successfully"
+    )
+
+@router.post("/me/upload-resume")
+def upload_resume(
+    file: UploadFile = File(...),
+    token_data=Depends(verify_token)
+):
+
+    email = token_data["email"]
+
+    os.makedirs("uploads", exist_ok=True)
+
+    filepath = f"uploads/{file.filename}"
+
+    with open(filepath, "wb") as buffer:
+
+        shutil.copyfileobj(file.file, buffer)
+
+    update_resume(email, file.filename)
+
+    return success_response(
+        "Resume Uploaded Successfully",
+        {
+            "filename": file.filename
+        }
     )

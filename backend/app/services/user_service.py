@@ -63,3 +63,62 @@ def delete_user(email: str):
     )
 
     return result.deleted_count
+
+def add_skill(email: str, skill: str):
+
+    result = users_collection.update_one(
+        {
+            "email": email
+        },
+        {
+            "$addToSet": {
+                "skills": skill
+            }
+        }
+    )
+
+    return result.modified_count
+
+def get_user_skills(email: str):
+
+    user = users_collection.find_one(
+        {
+            "email": email
+        }
+    )
+
+    if user:
+
+        return user.get("skills", [])
+
+    return None
+
+def remove_skill(email: str, skill: str):
+
+    result = users_collection.update_one(
+        {
+            "email": email
+        },
+        {
+            "$pull": {
+                "skills": skill
+            }
+        }
+    )
+
+    return result.modified_count
+
+def update_resume(email: str, filename: str):
+
+    result = users_collection.update_one(
+        {
+            "email": email
+        },
+        {
+            "$set": {
+                "resume": filename
+            }
+        }
+    )
+
+    return result.modified_count

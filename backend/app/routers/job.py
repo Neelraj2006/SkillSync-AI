@@ -9,6 +9,13 @@ from app.services.job_service import (
 
 from app.utils.response import success_response
 
+from fastapi import HTTPException
+
+from app.services.job_service import (
+    update_job,
+    delete_job
+)
+
 router = APIRouter(
     prefix="/jobs",
     tags=["Jobs"]
@@ -34,4 +41,41 @@ def view_jobs():
     return success_response(
         "Jobs Retrieved Successfully",
         jobs
+    )
+
+@router.put("/{title}")
+def edit_job(title: str, job: Job):
+
+    updated = update_job(
+        title,
+        job.model_dump()
+    )
+
+    if updated == 0:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found"
+        )
+
+    return success_response(
+        "Job Updated Successfully",
+        None
+    )
+
+@router.delete("/{title}")
+def remove_job(title: str):
+
+    deleted = delete_job(title)
+
+    if deleted == 0:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found"
+        )
+
+    return success_response(
+        "Job Deleted Successfully",
+        None
     )

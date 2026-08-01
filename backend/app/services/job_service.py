@@ -21,3 +21,27 @@ def get_all_jobs():
         jobs.append(job)
 
     return jobs
+
+def update_job(title, updated_data):
+
+    result = jobs_collection.update_one(
+        {
+            "title": title
+        },
+        {
+            "$set": updated_data
+        }
+    )
+
+    return result.modified_count
+
+
+def delete_job(title):
+
+    result = jobs_collection.delete_one(
+        {
+            "title": title
+        }
+    )
+
+    return result.deleted_count

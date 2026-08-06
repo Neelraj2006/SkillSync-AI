@@ -4,6 +4,7 @@ from app.routers.student import router as student_router
 from app.routers.user import router as user_router
 from app.routers.job import router as job_router
 from app.routers.recommendation import router as recommendation_router
+from app.routers.resume import router as resume_router
 
 app = FastAPI(
     title="SkillSync AI API",
@@ -34,6 +35,7 @@ app.include_router(job_router)
 app.include_router(
     recommendation_router
 )
+app.include_router(resume_router)
 
 @app.get("/")
 def home():

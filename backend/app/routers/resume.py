@@ -6,6 +6,7 @@ from app.utils.auth import verify_token
 from app.services.resume_parser import extract_text_from_pdf, analyze_resume
 from app.ai.skill_matcher import calculate_skill_match
 from app.services.job_service import get_job_by_title
+from app.database import users_collection
 
 
 router = APIRouter(
@@ -37,6 +38,18 @@ async def upload_resume(
     extracted_text = extract_text_from_pdf(file_path)
 
     analyzed_resume = analyze_resume(extracted_text)
+
+    users_collection.update_one(
+        {
+            "email": token_data["email"]
+        },
+        {
+            "$set": {
+                "skills": analyzed_resume["skills"],
+                "resume": file.filename
+            }
+        }
+    )
 
     job = get_job_by_title(job_title)
 

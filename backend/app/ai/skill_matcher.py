@@ -1,40 +1,56 @@
+def normalize_skill(skill):
+    return skill.strip().lower()
+
+
 def calculate_skill_match(user_skills, job_skills):
 
-    # Normalize skills for comparison
+    # Handle missing/empty skill lists safely
+    user_skills = user_skills or []
+    job_skills = job_skills or []
+
+    # Create normalized sets for comparison
     user_normalized = {
-        skill.strip().lower(): skill.strip()
+        normalize_skill(skill)
         for skill in user_skills
+        if skill and skill.strip()
     }
 
     job_normalized = {
-        skill.strip().lower(): skill.strip()
+        normalize_skill(skill)
         for skill in job_skills
+        if skill and skill.strip()
     }
 
     # Find matched and missing skills
-    matched_normalized = set(user_normalized).intersection(
-        set(job_normalized)
+    matched_normalized = user_normalized.intersection(
+        job_normalized
     )
 
-    missing_normalized = set(job_normalized) - set(user_normalized)
+    missing_normalized = job_normalized - user_normalized
 
-    # Preserve job's original spelling in the output
+    # Preserve the original job skill names in the response
+    job_original = {
+        normalize_skill(skill): skill.strip()
+        for skill in job_skills
+        if skill and skill.strip()
+    }
+
     matched_skills = [
-        job_normalized[skill]
+        job_original[skill]
         for skill in matched_normalized
     ]
 
     missing_skills = [
-        job_normalized[skill]
+        job_original[skill]
         for skill in missing_normalized
     ]
 
-    # Calculate percentage
-    if len(job_normalized) == 0:
+    # Calculate match percentage
+    if not job_normalized:
         match_percentage = 0
     else:
         match_percentage = round(
-            (len(matched_skills) / len(job_normalized)) * 100,
+            (len(matched_normalized) / len(job_normalized)) * 100,
             2
         )
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Depends, Query
+from fastapi import APIRouter, UploadFile, File, Depends, Query, HTTPException
 import os
 import shutil
 
@@ -7,6 +7,7 @@ from app.services.resume_parser import extract_text_from_pdf, analyze_resume
 from app.ai.skill_matcher import calculate_skill_match
 from app.services.job_service import get_job_by_title
 from app.database import users_collection
+from fastapi import HTTPException
 
 
 router = APIRouter(
@@ -26,6 +27,11 @@ async def upload_resume(
     job_title: str = Query(...),
     token_data=Depends(verify_token)
 ):
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(
+            status_code=400,
+            detail="Only PDF files are allowed"
+    )
 
     file_path = os.path.join(
         UPLOAD_FOLDER,
@@ -37,7 +43,20 @@ async def upload_resume(
 
     extracted_text = extract_text_from_pdf(file_path)
 
-    analyzed_resume = analyze_resume(extracted_text)
+    if not extracted_text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="The uploaded PDF contains no readable text"
+    )
+
+    try:
+        analyzed_resume = analyze_resume(extracted_text)
+
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail="Resume AI analysis service is currently unavailable"
+    )
 
     users_collection.update_one(
         {

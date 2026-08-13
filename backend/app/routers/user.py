@@ -1,32 +1,35 @@
-from fastapi import APIRouter
-from app.schemas.user import UserRegister
-from app.services.user_service import create_user
-from app.utils.response import success_response
-from app.schemas.user import UserLogin
-from app.services.user_service import get_user_by_email
-from app.services.user_service import update_user_name
-from app.utils.security import verify_password
-from app.utils.response import success_response, error_response
-from app.utils.jwt_handler import create_access_token
-from app.utils.auth import verify_token
-from fastapi import Depends
-from app.schemas.user import UserUpdate
-from app.services.user_service import delete_user
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+
+from app.schemas.user import UserRegister, UserLogin, UserUpdate
+
 from app.services.user_service import (
+    create_user,
+    get_user_by_email,
+    update_user_name,
+    delete_user,
     add_skill,
     get_user_skills,
-    remove_skill
+    remove_skill,
+    update_resume
 )
-from fastapi import UploadFile, File
+
+from app.utils.response import success_response
+from app.utils.security import verify_password
+from app.utils.jwt_handler import create_access_token
+from app.utils.auth import verify_token
+
 import shutil
 import os
-
-from app.services.user_service import update_resume
 
 
 router = APIRouter(
     tags=["Users"]
 )
+
+
+# -------------------------
+# REGISTER
+# -------------------------
 
 @router.post("/register")
 def register_user(user: UserRegister):
@@ -37,8 +40,9 @@ def register_user(user: UserRegister):
 
     if created_user is None:
 
-        return error_response(
-            message="Email already registered"
+        raise HTTPException(
+            status_code=409,
+            detail="Email already registered"
         )
 
     return success_response(
@@ -46,16 +50,32 @@ def register_user(user: UserRegister):
         data=created_user
     )
 
+
+# -------------------------
+# LOGIN
+# -------------------------
+
 @router.post("/login")
 def login_user(user: UserLogin):
 
     db_user = get_user_by_email(user.email)
 
     if db_user is None:
-        return error_response("User Not Found")
 
-    if not verify_password(user.password, db_user["password"]):
-        return error_response("Invalid Password")
+        raise HTTPException(
+            status_code=401,
+            detail="User Not Found"
+        )
+
+    if not verify_password(
+        user.password,
+        db_user["password"]
+    ):
+
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Password"
+        )
 
     token = create_access_token(
         {
@@ -70,6 +90,11 @@ def login_user(user: UserLogin):
             "token_type": "bearer"
         }
     )
+
+
+# -------------------------
+# CURRENT USER
+# -------------------------
 
 @router.get("/me")
 def get_current_user(
@@ -90,6 +115,11 @@ def get_current_user(
         "User Found",
         user
     )
+
+
+# -------------------------
+# UPDATE CURRENT USER
+# -------------------------
 
 @router.put("/me")
 def update_current_user(
@@ -114,6 +144,11 @@ def update_current_user(
         "User Updated Successfully"
     )
 
+
+# -------------------------
+# DELETE CURRENT USER
+# -------------------------
+
 @router.delete("/me")
 def delete_current_user(
     token_data=Depends(verify_token)
@@ -133,6 +168,11 @@ def delete_current_user(
         "User Deleted Successfully"
     )
 
+
+# -------------------------
+# ADD SKILL
+# -------------------------
+
 @router.post("/me/skills")
 def add_user_skill(
     skill: str,
@@ -141,7 +181,10 @@ def add_user_skill(
 
     email = token_data["email"]
 
-    updated = add_skill(email, skill)
+    updated = add_skill(
+        email,
+        skill
+    )
 
     if updated == 0:
 
@@ -152,6 +195,11 @@ def add_user_skill(
     return success_response(
         "Skill Added Successfully"
     )
+
+
+# -------------------------
+# GET SKILLS
+# -------------------------
 
 @router.get("/me/skills")
 def get_skills(
@@ -173,6 +221,11 @@ def get_skills(
         skills
     )
 
+
+# -------------------------
+# DELETE SKILL
+# -------------------------
+
 @router.delete("/me/skills/{skill}")
 def delete_skill(
     skill: str,
@@ -181,7 +234,10 @@ def delete_skill(
 
     email = token_data["email"]
 
-    removed = remove_skill(email, skill)
+    removed = remove_skill(
+        email,
+        skill
+    )
 
     if removed == 0:
 
@@ -193,6 +249,11 @@ def delete_skill(
         "Skill Removed Successfully"
     )
 
+
+# -------------------------
+# UPLOAD RESUME
+# -------------------------
+
 @router.post("/me/upload-resume")
 def upload_resume(
     file: UploadFile = File(...),
@@ -201,15 +262,24 @@ def upload_resume(
 
     email = token_data["email"]
 
-    os.makedirs("uploads", exist_ok=True)
+    os.makedirs(
+        "uploads",
+        exist_ok=True
+    )
 
     filepath = f"uploads/{file.filename}"
 
     with open(filepath, "wb") as buffer:
 
-        shutil.copyfileobj(file.file, buffer)
+        shutil.copyfileobj(
+            file.file,
+            buffer
+        )
 
-    update_resume(email, file.filename)
+    update_resume(
+        email,
+        file.filename
+    )
 
     return success_response(
         "Resume Uploaded Successfully",

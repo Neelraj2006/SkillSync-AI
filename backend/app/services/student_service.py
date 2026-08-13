@@ -1,6 +1,9 @@
 from app.database import students_collection
+
 from fastapi import HTTPException
+
 from bson import ObjectId
+from bson.errors import InvalidId
 
 
 def create_student(student_dict):
@@ -14,7 +17,9 @@ def create_student(student_dict):
 
 def get_all_students():
 
-    students = list(students_collection.find())
+    students = list(
+        students_collection.find()
+    )
 
     for student in students:
         student["_id"] = str(student["_id"])
@@ -22,27 +27,35 @@ def get_all_students():
     return students
 
 
-# ---------------------------
-# NEW FUNCTION
-# ---------------------------
 def get_student_by_id(student_id):
+
+    try:
+
+        object_id = ObjectId(student_id)
+
+    except InvalidId:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid Student ID"
+        )
 
     student = students_collection.find_one(
         {
-            "_id": ObjectId(student_id)
+            "_id": object_id
         }
     )
 
-    if student:
+    if student is None:
 
-        student["_id"] = str(student["_id"])
+        raise HTTPException(
+            status_code=404,
+            detail="Student not found"
+        )
 
-        return student
+    student["_id"] = str(student["_id"])
 
-    raise HTTPException(
-        status_code=404,
-        detail="Student not found"
-    )
+    return student
 
 
 def get_student_by_name(name):
@@ -53,16 +66,16 @@ def get_student_by_name(name):
         }
     )
 
-    if student:
+    if student is None:
 
-        student["_id"] = str(student["_id"])
+        raise HTTPException(
+            status_code=404,
+            detail="Student not found"
+        )
 
-        return student
+    student["_id"] = str(student["_id"])
 
-    raise HTTPException(
-        status_code=404,
-        detail="Student not found"
-    )
+    return student
 
 
 def update_student_age(name, age):
@@ -78,8 +91,14 @@ def update_student_age(name, age):
                 "age": age
             }
         }
-
     )
+
+    if result.matched_count == 0:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Student not found"
+        )
 
     return result.modified_count
 
@@ -91,5 +110,12 @@ def delete_student(name):
             "name": name
         }
     )
+
+    if result.deleted_count == 0:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Student not found"
+        )
 
     return result.deleted_count

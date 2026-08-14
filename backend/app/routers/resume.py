@@ -7,7 +7,6 @@ from app.services.resume_parser import extract_text_from_pdf, analyze_resume
 from app.ai.skill_matcher import calculate_skill_match
 from app.services.job_service import get_job_by_title
 from app.database import users_collection
-from fastapi import HTTPException
 
 
 router = APIRouter(
@@ -73,9 +72,10 @@ async def upload_resume(
     job = get_job_by_title(job_title)
 
     if job is None:
-        return {
-            "error": "Job not found"
-        }
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found"
+    )
 
     job_skills = job["skills"]
 

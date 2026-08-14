@@ -81,11 +81,9 @@ def get_student_by_name(name):
 def update_student_age(name, age):
 
     result = students_collection.update_one(
-
         {
             "name": name
         },
-
         {
             "$set": {
                 "age": age

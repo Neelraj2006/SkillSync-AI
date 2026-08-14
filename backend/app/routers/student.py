@@ -33,10 +33,7 @@ router = APIRouter(
     summary="Register Student",
     description="Creates a new student in MongoDB."
 )
-def register_student(
-    student: Student,
-    token_data=Depends(verify_token)
-):
+def register_student(student: Student):
 
     student_dict = student.model_dump()
 
@@ -54,12 +51,8 @@ def register_student(
 # GET ALL STUDENTS
 # -------------------------
 
-@router.get(
-    "/"
-)
-def get_students(
-    token_data=Depends(verify_token)
-):
+@router.get("/")
+def get_students():
 
     students = get_all_students()
 
@@ -70,20 +63,16 @@ def get_students(
 
 
 # -------------------------
-# GET STUDENT BY ID
+# GET STUDENT BY NAME
 # -------------------------
 
-@router.get(
-    "/{student_id}"
-)
-def get_student(
-    student_id: str,
+@router.get("/name/{name}")
+def get_student_by_name_route(
+    name: str,
     token_data=Depends(verify_token)
 ):
 
-    student = get_student_by_id(
-        student_id
-    )
+    student = get_student_by_name(name)
 
     return success_response(
         "Student Found",
@@ -92,20 +81,15 @@ def get_student(
 
 
 # -------------------------
-# GET STUDENT BY NAME
+# GET STUDENT BY ID
 # -------------------------
 
-@router.get(
-    "/name/{name}"
-)
-def get_student_by_name_route(
-    name: str,
-    token_data=Depends(verify_token)
+@router.get("/{student_id}")
+def get_student(
+    student_id: str
 ):
 
-    student = get_student_by_name(
-        name
-    )
+    student = get_student_by_id(student_id)
 
     return success_response(
         "Student Found",
@@ -124,8 +108,7 @@ def get_student_by_name_route(
 )
 def update_student(
     name: str,
-    age: int,
-    token_data=Depends(verify_token)
+    age: int
 ):
 
     update_student_age(
@@ -147,14 +130,9 @@ def update_student(
     summary="Delete Student",
     description="Deletes a student using their name."
 )
-def remove_student(
-    name: str,
-    token_data=Depends(verify_token)
-):
+def remove_student(name: str):
 
-    delete_student(
-        name
-    )
+    delete_student(name)
 
     return success_response(
         message="Student Deleted Successfully"

@@ -1,4 +1,7 @@
 from app.database import jobs_collection
+from bson import ObjectId
+from bson.errors import InvalidId
+from fastapi import HTTPException
 
 
 def create_job(job_dict):
@@ -35,27 +38,46 @@ def get_job_by_title(title):
 
     return job
 
-def update_job(title, updated_data):
+def update_job(job_id, updated_data):
+
+    try:
+        object_id = ObjectId(job_id)
+
+    except InvalidId:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid Job ID"
+        )
 
     result = jobs_collection.update_one(
         {
-            "title": title
+            "_id": object_id
         },
         {
             "$set": updated_data
         }
     )
 
-    return result.modified_count
+    return result.matched_count
 
 
-def delete_job(title):
+def delete_job(job_id):
+
+    try:
+        object_id = ObjectId(job_id)
+
+    except InvalidId:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid Job ID"
+        )
 
     result = jobs_collection.delete_one(
         {
-            "title": title
+            "_id": object_id
         }
     )
 
     return result.deleted_count
-

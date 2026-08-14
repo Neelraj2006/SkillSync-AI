@@ -43,11 +43,11 @@ def view_jobs():
         jobs
     )
 
-@router.put("/{title}")
-def edit_job(title: str, job: Job):
+@router.put("/{job_id}")
+def edit_job(job_id: str, job: Job):
 
     updated = update_job(
-        title,
+        job_id,
         job.model_dump()
     )
 
@@ -63,10 +63,11 @@ def edit_job(title: str, job: Job):
         None
     )
 
-@router.delete("/{title}")
-def remove_job(title: str):
 
-    deleted = delete_job(title)
+@router.delete("/{job_id}")
+def remove_job(job_id: str):
+
+    deleted = delete_job(job_id)
 
     if deleted == 0:
 

@@ -13,7 +13,10 @@ from app.services.user_service import (
     update_resume
 )
 
-from app.utils.response import success_response
+from app.utils.response import (
+    success_response,
+    error_response
+)
 from app.utils.security import verify_password
 from app.utils.jwt_handler import create_access_token
 from app.utils.auth import verify_token
@@ -106,10 +109,10 @@ def get_current_user(
     user = get_user_by_email(email)
 
     if user is None:
-
-        return error_response(
-            "User Not Found"
-        )
+        raise HTTPException(
+            status_code=404,
+            detail="User Not Found"
+    )
 
     return success_response(
         "User Found",
@@ -135,10 +138,10 @@ def update_current_user(
     )
 
     if updated == 0:
-
-        return error_response(
-            "User Not Updated"
-        )
+        raise HTTPException(
+            status_code=404,
+            detail="User Not Found"
+    )
 
     return success_response(
         "User Updated Successfully"
@@ -160,8 +163,9 @@ def delete_current_user(
 
     if deleted == 0:
 
-        return error_response(
-            "User Not Found"
+        raise HTTPException(
+            status_code=404,
+            detail="User Not Found"
         )
 
     return success_response(
@@ -188,8 +192,9 @@ def add_user_skill(
 
     if updated == 0:
 
-        return error_response(
-            "Skill Already Exists or User Not Found"
+        raise HTTPException(
+            status_code=404,
+            detail="Skill Already Exists or User Not Found"
         )
 
     return success_response(
@@ -211,10 +216,10 @@ def get_skills(
     skills = get_user_skills(email)
 
     if skills is None:
-
-        return error_response(
-            "User Not Found"
-        )
+        raise HTTPException(
+            status_code=404,
+            detail="User Not Found"
+    )
 
     return success_response(
         "Skills Retrieved Successfully",
@@ -240,10 +245,10 @@ def delete_skill(
     )
 
     if removed == 0:
-
-        return error_response(
-            "Skill Not Found"
-        )
+        raise HTTPException(
+            status_code=404,
+            detail="Skill Not Found"
+    )
 
     return success_response(
         "Skill Removed Successfully"
@@ -261,6 +266,11 @@ def upload_resume(
 ):
 
     email = token_data["email"]
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(
+            status_code=400,
+            detail="Only PDF files are allowed"
+    )
 
     os.makedirs(
         "uploads",

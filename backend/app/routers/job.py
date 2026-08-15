@@ -4,17 +4,16 @@ from app.schemas.job import Job
 
 from app.services.job_service import (
     create_job,
-    get_all_jobs
+    get_all_jobs,
+    get_job_by_id,
+    update_job,
+    delete_job
 )
 
 from app.utils.response import success_response
 
 from fastapi import HTTPException
 
-from app.services.job_service import (
-    update_job,
-    delete_job
-)
 
 router = APIRouter(
     prefix="/jobs",
@@ -41,6 +40,20 @@ def view_jobs():
     return success_response(
         "Jobs Retrieved Successfully",
         jobs
+    )
+
+@router.get("/{job_id}")
+def view_job(
+    job_id: str
+):
+
+    job = get_job_by_id(
+        job_id
+    )
+
+    return success_response(
+        "Job Retrieved Successfully",
+        job
     )
 
 @router.put("/{job_id}")

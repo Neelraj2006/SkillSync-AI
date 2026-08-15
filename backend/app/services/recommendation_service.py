@@ -32,6 +32,8 @@ def recommend_jobs(email):
 
         recommendations.append({
 
+            "job_id": str(job["_id"]),
+
             "job_title": job["title"],
 
             "company": job["company"],

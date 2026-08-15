@@ -81,3 +81,32 @@ def delete_job(job_id):
     )
 
     return result.deleted_count
+
+def get_job_by_id(job_id):
+
+    try:
+        object_id = ObjectId(job_id)
+
+    except InvalidId:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid Job ID"
+        )
+
+    job = jobs_collection.find_one(
+        {
+            "_id": object_id
+        }
+    )
+
+    if job is None:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found"
+        )
+
+    job["_id"] = str(job["_id"])
+
+    return job

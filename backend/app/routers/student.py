@@ -33,7 +33,10 @@ router = APIRouter(
     summary="Register Student",
     description="Creates a new student in MongoDB."
 )
-def register_student(student: Student):
+def register_student(
+    student: Student,
+    token_data=Depends(verify_token)
+):
 
     student_dict = student.model_dump()
 
@@ -52,13 +55,35 @@ def register_student(student: Student):
 # -------------------------
 
 @router.get("/")
-def get_students():
+def get_students(
+    token_data=Depends(verify_token)
+):
 
     students = get_all_students()
 
     return success_response(
         message="Students fetched successfully",
         data=students
+    )
+
+
+# -------------------------
+# GET STUDENT BY ID
+# -------------------------
+
+@router.get("/{student_id}")
+def get_student(
+    student_id: str,
+    token_data=Depends(verify_token)
+):
+
+    student = get_student_by_id(
+        student_id
+    )
+
+    return success_response(
+        "Student Found",
+        student
     )
 
 
@@ -72,24 +97,9 @@ def get_student_by_name_route(
     token_data=Depends(verify_token)
 ):
 
-    student = get_student_by_name(name)
-
-    return success_response(
-        "Student Found",
-        student
+    student = get_student_by_name(
+        name
     )
-
-
-# -------------------------
-# GET STUDENT BY ID
-# -------------------------
-
-@router.get("/{student_id}")
-def get_student(
-    student_id: str
-):
-
-    student = get_student_by_id(student_id)
 
     return success_response(
         "Student Found",
@@ -108,7 +118,8 @@ def get_student(
 )
 def update_student(
     name: str,
-    age: int
+    age: int,
+    token_data=Depends(verify_token)
 ):
 
     update_student_age(
@@ -130,9 +141,14 @@ def update_student(
     summary="Delete Student",
     description="Deletes a student using their name."
 )
-def remove_student(name: str):
+def remove_student(
+    name: str,
+    token_data=Depends(verify_token)
+):
 
-    delete_student(name)
+    delete_student(
+        name
+    )
 
     return success_response(
         message="Student Deleted Successfully"

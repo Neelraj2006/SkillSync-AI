@@ -1,14 +1,18 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../services/authService";
 import "./Login.css";
 
 function Login() {
+
+    const navigate = useNavigate();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
+
 
     const handleLogin = async (e) => {
 
@@ -24,9 +28,43 @@ function Login() {
                 password
             });
 
-            setMessage(
-                result.message || "Login successful"
+
+            // -------------------------
+            // GET JWT FROM RESPONSE
+            // -------------------------
+
+            const token = result.data?.access_token;
+
+            if (!token) {
+
+                setMessage(
+                    "Login succeeded, but no access token was received."
+                );
+
+                return;
+            }
+
+
+            // -------------------------
+            // STORE AUTHENTICATION DATA
+            // -------------------------
+
+            localStorage.setItem(
+                "access_token",
+                token
             );
+
+            localStorage.setItem(
+                "token_type",
+                result.data?.token_type || "bearer"
+            );
+
+
+            // -------------------------
+            // REDIRECT TO DASHBOARD
+            // -------------------------
+
+            navigate("/dashboard");
 
         } catch (error) {
 
@@ -40,6 +78,7 @@ function Login() {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="login-page">
@@ -97,7 +136,10 @@ function Login() {
                         Sign in to continue to SkillSync AI.
                     </p>
 
+
                     <form onSubmit={handleLogin}>
+
+                        {/* EMAIL */}
 
                         <div className="form-group">
 
@@ -118,6 +160,8 @@ function Login() {
                         </div>
 
 
+                        {/* PASSWORD */}
+
                         <div className="form-group">
 
                             <label>
@@ -137,6 +181,8 @@ function Login() {
                         </div>
 
 
+                        {/* LOGIN BUTTON */}
+
                         <button
                             className="login-button"
                             type="submit"
@@ -151,6 +197,8 @@ function Login() {
                     </form>
 
 
+                    {/* MESSAGE */}
+
                     {message && (
                         <div className="login-message">
                             {message}
@@ -158,8 +206,19 @@ function Login() {
                     )}
 
 
+                    {/* REGISTER LINK */}
+
                     <div className="login-footer">
-                        Your career journey, powered by AI.
+
+                        Don't have an account?{" "}
+
+                        <Link
+                            to="/register"
+                            className="login-register-link"
+                        >
+                            Create one
+                        </Link>
+
                     </div>
 
                 </div>

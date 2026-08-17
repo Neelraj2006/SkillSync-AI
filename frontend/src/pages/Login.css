@@ -243,3 +243,17 @@
         padding: 30px;
     }
 }
+
+.login-register-link {
+    color: #818cf8;
+
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition: 0.2s ease;
+}
+
+.login-register-link:hover {
+    color: #38bdf8;
+}

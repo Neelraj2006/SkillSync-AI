@@ -27,3 +27,10 @@ export const registerUser = async (userData) => {
 
     return response.data;
 };
+
+export const getCurrentUser = async () => {
+
+    const response = await api.get("/me");
+
+    return response.data;
+};

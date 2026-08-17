@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { registerUser } from "../services/authService";
 import "./Register.css";
 
@@ -177,7 +178,16 @@ function Register() {
                     )}
 
                     <div className="register-footer">
-                        Your career journey starts here.
+
+                        Already have an account?{" "}
+
+                        <Link
+                            to="/login"
+                            className="register-login-link"
+                        >
+                            Sign in
+                        </Link>
+
                     </div>
 
                 </div>

@@ -1,40 +1,63 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { getCurrentUser } from "../services/authService";
-
+import api from "../api/api";
 import "./Dashboard.css";
-
 
 function Dashboard() {
 
     const navigate = useNavigate();
 
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [jobs, setJobs] = useState([]);
+    const [recommendations, setRecommendations] = useState([]);
 
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
 
-        const loadUser = async () => {
+        const loadDashboard = async () => {
 
             try {
 
-                const result = await getCurrentUser();
+                const results = await Promise.allSettled([
+                    api.get("/me"),
+                    api.get("/jobs/"),
+                    api.get("/recommendations/")
+                ]);
 
-                setUser(result.data);
+                // USER
+                if (results[0].status === "fulfilled") {
+
+                    setUser(
+                        results[0].value.data.data
+                    );
+
+                }
+
+                // JOBS
+                if (results[1].status === "fulfilled") {
+
+                    setJobs(
+                        results[1].value.data.data || []
+                    );
+
+                }
+
+                // RECOMMENDATIONS
+                if (results[2].status === "fulfilled") {
+
+                    setRecommendations(
+                        results[2].value.data.data || []
+                    );
+
+                }
 
             } catch (error) {
 
                 console.error(
-                    "Authentication failed:",
+                    "Unable to load dashboard:",
                     error
                 );
-
-                localStorage.removeItem("access_token");
-                localStorage.removeItem("token_type");
-
-                navigate("/login");
 
             } finally {
 
@@ -43,16 +66,14 @@ function Dashboard() {
             }
         };
 
+        loadDashboard();
 
-        loadUser();
-
-    }, [navigate]);
+    }, []);
 
 
     const handleLogout = () => {
 
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("token_type");
+        localStorage.removeItem("token");
 
         navigate("/login");
 
@@ -63,132 +84,134 @@ function Dashboard() {
 
         return (
             <div className="dashboard-loading">
-                <div className="loading-orb"></div>
-                <p>Loading your career workspace...</p>
+
+                <div className="loading-content">
+
+                    <div className="loading-orb">
+                        ✦
+                    </div>
+
+                    <p>
+                        Loading your career intelligence...
+                    </p>
+
+                </div>
+
             </div>
         );
 
     }
 
 
+    const topRecommendations =
+        [...recommendations]
+            .sort(
+                (a, b) =>
+                    b.match_percentage -
+                    a.match_percentage
+            )
+            .slice(0, 3);
+
+
     return (
 
         <div className="dashboard-page">
 
-            {/* SIDEBAR */}
+            {/* NAVBAR */}
 
-            <aside className="dashboard-sidebar">
+            <nav className="dashboard-navbar">
 
-                <div className="sidebar-logo">
-
-                    <div className="logo-mark">
-                        S
-                    </div>
-
-                    <div>
-                        <h2>SkillSync</h2>
-                        <span>AI CAREER INTELLIGENCE</span>
-                    </div>
-
+                <div
+                    className="dashboard-logo"
+                    onClick={() =>
+                        navigate("/dashboard")
+                    }
+                >
+                    Skill<span>Sync</span> AI
                 </div>
 
 
-                <nav className="sidebar-nav">
+                <div className="dashboard-nav-links">
 
-                    <p className="nav-label">
-                        WORKSPACE
-                    </p>
-
-                    <button className="nav-item active">
-                        <span>⌂</span>
-                        Overview
-                    </button>
-
-                    <button className="nav-item">
-                        <span>✦</span>
-                        Resume AI
-                    </button>
-
-                    <button className="nav-item">
-                        <span>◇</span>
-                        My Skills
-                    </button>
-
-                    <button className="nav-item">
-                        <span>◈</span>
-                        Job Opportunities
+                    <button
+                        onClick={() =>
+                            navigate("/dashboard")
+                        }
+                    >
+                        Dashboard
                     </button>
 
 
-                    <p className="nav-label nav-label-profile">
-                        ACCOUNT
-                    </p>
-
-                    <button className="nav-item">
-                        <span>◎</span>
+                    <button
+                        onClick={() =>
+                            navigate("/profile")
+                        }
+                    >
                         Profile
                     </button>
 
-                </nav>
-
-
-                <div className="sidebar-bottom">
 
                     <button
-                        className="logout-button"
                         onClick={handleLogout}
+                        className="logout-button"
                     >
-                        <span>↪</span>
                         Logout
                     </button>
 
                 </div>
 
-            </aside>
+            </nav>
 
 
-            {/* MAIN CONTENT */}
+            {/* MAIN */}
 
-            <main className="dashboard-main">
+            <main className="dashboard-content">
 
-                {/* TOP BAR */}
 
-                <header className="dashboard-header">
+                {/* HERO */}
+
+                <section className="dashboard-hero">
 
                     <div>
 
                         <p className="dashboard-eyebrow">
-                            CAREER WORKSPACE
+                            CAREER INTELLIGENCE
                         </p>
+
 
                         <h1>
-                            Welcome back,{" "}
+
+                            Welcome back,
+
                             <span>
+                                {" "}
                                 {user?.name || "there"}
                             </span>
+
+                            .
+
                         </h1>
 
-                        <p className="dashboard-header-text">
-                            Your AI-powered career workspace is ready.
+
+                        <p>
+
+                            Your AI-powered career workspace.
+                            Discover opportunities, understand
+                            your skills, and find where you
+                            are the strongest match.
+
                         </p>
 
                     </div>
 
+                </section>
 
-                    <div className="user-avatar">
-
-                        {(user?.name || user?.email || "U")
-                            .charAt(0)
-                            .toUpperCase()}
-
-                    </div>
-
-                </header>
 
 
                 {/* STAT CARDS */}
 
                 <section className="dashboard-stats">
+
 
                     <div className="stat-card">
 
@@ -198,36 +221,20 @@ function Dashboard() {
 
                         <div>
 
-                            <p>Resume Status</p>
+                            <p>
+                                Resume
+                            </p>
 
                             <h3>
                                 {user?.resume
-                                    ? "Analyzed"
-                                    : "Not Uploaded"}
+                                    ? "Uploaded"
+                                    : "Not uploaded"}
                             </h3>
 
                         </div>
 
                     </div>
 
-
-                    <div className="stat-card">
-
-                        <div className="stat-icon">
-                            ◇
-                        </div>
-
-                        <div>
-
-                            <p>Skills Detected</p>
-
-                            <h3>
-                                {user?.skills?.length || 0}
-                            </h3>
-
-                        </div>
-
-                    </div>
 
 
                     <div className="stat-card">
@@ -238,10 +245,34 @@ function Dashboard() {
 
                         <div>
 
-                            <p>Job Matches</p>
+                            <p>
+                                Your Skills
+                            </p>
 
                             <h3>
-                                —
+                                {user?.skills?.length || 0}
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div className="stat-card">
+
+                        <div className="stat-icon">
+                            ◎
+                        </div>
+
+                        <div>
+
+                            <p>
+                                Available Jobs
+                            </p>
+
+                            <h3>
+                                {jobs.length}
                             </h3>
 
                         </div>
@@ -251,214 +282,359 @@ function Dashboard() {
                 </section>
 
 
-                {/* MAIN GRID */}
+
+                {/* FEATURE GRID */}
 
                 <section className="dashboard-grid">
 
 
-                    {/* RESUME CARD */}
+                    {/* RESUME */}
 
-                    <div className="dashboard-card resume-card">
+                    <div className="dashboard-feature resume-feature">
 
-                        <div className="card-heading">
+                        <div>
 
-                            <div>
+                            <div className="feature-top">
 
-                                <p className="card-kicker">
-                                    RESUME INTELLIGENCE
-                                </p>
+                                <span className="feature-label">
+                                    AI RESUME
+                                </span>
 
-                                <h2>
-                                    Let AI understand your resume.
-                                </h2>
-
-                            </div>
-
-                            <span className="card-symbol">
-                                ✦
-                            </span>
-
-                        </div>
-
-
-                        {user?.resume ? (
-
-                            <div className="resume-status">
-
-                                <div className="status-dot"></div>
-
-                                <div>
-
-                                    <strong>
-                                        {user.resume}
-                                    </strong>
-
-                                    <p>
-                                        Your resume is connected
-                                        to your SkillSync profile.
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                        ) : (
-
-                            <div className="resume-empty">
-
-                                <p>
-                                    Upload your resume to unlock
-                                    AI-powered skill extraction,
-                                    analysis and job matching.
-                                </p>
-
-                                <button>
-                                    Analyze Resume →
-                                </button>
-
-                            </div>
-
-                        )}
-
-                    </div>
-
-
-                    {/* SKILLS CARD */}
-
-                    <div className="dashboard-card skills-card">
-
-                        <div className="card-heading">
-
-                            <div>
-
-                                <p className="card-kicker">
-                                    YOUR SKILLS
-                                </p>
-
-                                <h2>
-                                    Skill profile
-                                </h2>
-
-                            </div>
-
-                            <span className="card-symbol">
-                                ◇
-                            </span>
-
-                        </div>
-
-
-                        {user?.skills?.length > 0 ? (
-
-                            <div className="skill-list">
-
-                                {user.skills
-                                    .slice(0, 8)
-                                    .map((skill, index) => (
-
-                                        <span
-                                            className="skill-pill"
-                                            key={index}
-                                        >
-                                            {skill}
-                                        </span>
-
-                                    ))}
-
-                            </div>
-
-                        ) : (
-
-                            <div className="empty-card">
-
-                                <p>
-                                    No skills detected yet.
-                                </p>
-
-                                <span>
-                                    Upload your resume to let
-                                    SkillSync AI build your profile.
+                                <span className="feature-symbol">
+                                    ✦
                                 </span>
 
                             </div>
 
-                        )}
+
+                            <h2>
+                                Resume Intelligence
+                            </h2>
+
+
+                            <p>
+
+                                Upload your resume and let
+                                SkillSync AI extract your skills,
+                                education, experience, projects,
+                                and professional profile.
+
+                            </p>
+
+                        </div>
+
+
+                        <button
+                            onClick={() =>
+                                navigate("/resume")
+                            }
+                        >
+                            Analyze Resume →
+                        </button>
 
                     </div>
 
 
-                    {/* JOB MATCHING */}
 
-                    <div className="dashboard-card jobs-card">
+                    {/* JOBS */}
 
-                        <div className="card-heading">
+                    <div className="dashboard-feature jobs-feature">
 
-                            <div>
+                        <div className="feature-top">
 
-                                <p className="card-kicker">
-                                    AI MATCHING
-                                </p>
+                            <span className="feature-label">
+                                OPPORTUNITIES
+                            </span>
 
-                                <h2>
-                                    Recommended opportunities
-                                </h2>
-
-                            </div>
-
-                            <span className="card-symbol">
+                            <span className="feature-symbol">
                                 ◈
                             </span>
 
                         </div>
 
 
-                        <div className="jobs-placeholder">
+                        <h2>
+                            Explore Jobs
+                        </h2>
 
-                            <div className="jobs-glow">
-                                ✦
-                            </div>
 
-                            <h3>
-                                Your opportunities will appear here.
-                            </h3>
+                        <p>
 
-                            <p>
-                                SkillSync AI will compare your
-                                skills against available jobs
-                                and rank the strongest matches.
-                            </p>
+                            {jobs.length > 0
 
-                            <button>
-                                Explore Jobs →
-                            </button>
+                                ? `${jobs.length} opportunities are currently available.`
+                                : "Discover opportunities that match your career profile."
 
-                        </div>
+                            }
+
+                        </p>
+
+
+                        <button
+                            onClick={() =>
+                                navigate("/jobs")
+                            }
+                        >
+                            Browse Jobs →
+                        </button>
 
                     </div>
 
 
-                    {/* CAREER INSIGHT */}
 
-                    <div className="dashboard-card insight-card">
+                    {/* RECOMMENDATIONS */}
 
-                        <p className="card-kicker">
-                            SKILLSYNC INSIGHT
-                        </p>
+                    <div className="dashboard-feature recommendation-feature">
+
+                        <div className="feature-top">
+
+                            <span className="feature-label">
+                                AI RECOMMENDATIONS
+                            </span>
+
+                            <span className="feature-symbol">
+                                ⌁
+                            </span>
+
+                        </div>
+
 
                         <h2>
-                            Your career profile is just getting started.
+                            Smart Recommendations
                         </h2>
 
+
                         <p>
-                            Complete your profile and upload a resume
-                            to unlock personalized career intelligence.
+
+                            {recommendations.length > 0
+
+                                ? `${recommendations.length} jobs analyzed against your skills.`
+                                : "Upload your resume to generate personalized recommendations."
+
+                            }
+
                         </p>
 
-                        <div className="insight-line"></div>
 
-                        <span>
-                            AI-powered career decisions, simplified.
-                        </span>
+                        <button
+                            onClick={() =>
+                                navigate("/recommendations")
+                            }
+                        >
+                            View Recommendations →
+                        </button>
+
+                    </div>
+
+                </section>
+
+
+
+                {/* TOP MATCHES */}
+
+                <section className="matches-section">
+
+
+                    <div className="section-heading">
+
+                        <div>
+
+                            <p className="dashboard-eyebrow">
+                                AI MATCHING
+                            </p>
+
+                            <h2>
+                                Your Top Matches
+                            </h2>
+
+                        </div>
+
+
+                        {recommendations.length > 0 && (
+
+                            <button
+                                onClick={() =>
+                                    navigate("/recommendations")
+                                }
+                            >
+                                View All →
+                            </button>
+
+                        )}
+
+                    </div>
+
+
+
+                    {topRecommendations.length > 0 ? (
+
+                        <div className="matches-list">
+
+                            {topRecommendations.map(
+                                (recommendation, index) => (
+
+                                    <div
+                                        className="match-card"
+                                        key={`${recommendation.job_title}-${index}`}
+                                    >
+
+                                        <div className="match-main">
+
+                                            <div className="match-rank">
+                                                0{index + 1}
+                                            </div>
+
+
+                                            <div>
+
+                                                <h3>
+                                                    {recommendation.job_title}
+                                                </h3>
+
+                                                <p>
+                                                    {recommendation.company}
+                                                </p>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <div className="match-details">
+
+                                            <div className="match-score">
+
+                                                <strong>
+                                                    {Math.round(
+                                                        recommendation.match_percentage
+                                                    )}%
+                                                </strong>
+
+                                                <span>
+                                                    Match
+                                                </span>
+
+                                            </div>
+
+
+                                            <span
+                                                className={`recommendation-badge ${
+                                                    recommendation.match_percentage >= 80
+                                                        ? "high-match"
+                                                        : recommendation.match_percentage >= 50
+                                                            ? "medium-match"
+                                                            : "low-match"
+                                                }`}
+                                            >
+                                                {recommendation.recommendation}
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                )
+                            )}
+
+                        </div>
+
+                    ) : (
+
+                        <div className="empty-matches">
+
+                            <div className="empty-icon">
+                                ⌁
+                            </div>
+
+                            <div>
+
+                                <h3>
+                                    No recommendations yet
+                                </h3>
+
+                                <p>
+                                    Upload your resume to let
+                                    SkillSync AI analyze your skills
+                                    and find suitable opportunities.
+                                </p>
+
+                            </div>
+
+                            <button
+                                onClick={() =>
+                                    navigate("/resume")
+                                }
+                            >
+                                Analyze Resume →
+                            </button>
+
+                        </div>
+
+                    )}
+
+                </section>
+
+
+
+                {/* SKILLS */}
+
+                <section className="skills-section">
+
+
+                    <div className="section-heading">
+
+                        <div>
+
+                            <p className="dashboard-eyebrow">
+                                YOUR PROFILE
+                            </p>
+
+                            <h2>
+                                Current Skills
+                            </h2>
+
+                        </div>
+
+
+                        <button
+                            onClick={() =>
+                                navigate("/profile")
+                            }
+                        >
+                            Manage Profile →
+                        </button>
+
+                    </div>
+
+
+
+                    <div className="skills-container">
+
+                        {user?.skills?.length > 0 ? (
+
+                            user.skills.map(
+                                (skill, index) => (
+
+                                    <span
+                                        className="skill-pill"
+                                        key={index}
+                                    >
+                                        {skill}
+                                    </span>
+
+                                )
+                            )
+
+                        ) : (
+
+                            <p className="empty-skills">
+
+                                Upload your resume to automatically
+                                discover your technical skills.
+
+                            </p>
+
+                        )}
 
                     </div>
 

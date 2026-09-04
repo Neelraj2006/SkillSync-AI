@@ -1,9 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import db
-
-
 from app.routers.student import router as student_router
 from app.routers.user import router as user_router
 from app.routers.job import router as job_router
@@ -16,20 +13,27 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        # Add your Vercel URL here after frontend deployment.
+        # Example:
+        # "https://skillsync-ai.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.get("/")
 def home():
     return {
         "project": "SkillSync AI",
         "status": "Running",
-        "version": "1.0.0"
+        "version": "1.0.0",
     }
 
 
@@ -37,14 +41,14 @@ def home():
 def about():
     return {
         "project": "SkillSync AI",
-        "description": "AI-powered resume analysis and job recommendation platform"
+        "description": "AI-powered resume analysis and job recommendation platform",
     }
 
 
 @app.get("/health")
 def health():
     return {
-        "status": "Running Successfully"
+        "status": "Running Successfully",
     }
 
 

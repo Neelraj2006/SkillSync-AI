@@ -2,6 +2,32 @@ services:
   - type: web
     name: skillsync-ai-backend
     runtime: python
+    plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+
+    envVars:
+      - key: MONGO_URI
+        sync: false
+
+      - key: DATABASE_NAME
+        value: skillsync_ai
+
+      - key: STUDENT_COLLECTION
+        value: students
+
+      - key: USER_COLLECTION
+        value: users
+
+      - key: GEMINI_API_KEY
+        sync: false
+
+      - key: SECRET_KEY
+        sync: false
+
+      - key: ALGORITHM
+        value: HS256
+
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"

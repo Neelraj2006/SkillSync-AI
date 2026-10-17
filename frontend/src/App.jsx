@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Resume from "./pages/Resume";
 import Recommendations from "./pages/Recommendations";
 import Profile from "./pages/Profile";
+import Jobs from "./pages/Jobs";
 
 function App() {
 

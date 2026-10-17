@@ -17,11 +17,10 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        # Add your Vercel URL here after frontend deployment.
-        # Example:
-        # "https://skillsync-ai.vercel.app",
-    ],
+    "http://localhost:5173",
+    "https://skill-sync-ai-two.vercel.app",
+    "https://skill-sync-ai-git-main-neelraj2006.vercel.app",
+],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
